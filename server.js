@@ -49,8 +49,8 @@ function init(){
   }
   ])
   .then((res)=>{
-    console.log(res.userChoice);
-    switch(res.userChoice){
+    // console.log(res.toDo);
+    switch(res.toDo){
       case 'View All Employees':
         viewAllEmployees();
         break;
@@ -154,6 +154,67 @@ function addEmployee() {
       });
     });
 }
+// TO DO: **********************************
+// View employee by manager and update manager. Stuck on managers.
+
+
+// TO DO: ************************
+// currently shows department id instead of department
+function  viewAllRoles() {
+  let query = `SELECT * FROM role`;
+  connection.query(query, function(err, res) {
+    if (err) throw err;
+    console.table(res);
+    init();
+  });
+}
+
+// TO DO: ****************************
+// Update employee role
+
+function addRole() {
+  inquirer
+    .prompt([
+      {
+        type: "input",
+        message: "What is the name of the new role?",
+        name: "addRoleName"
+      },
+      {
+        type: "input",
+        message: "What is the salary of the new role? (numbers only)",
+        name: "addRoleSalary"
+      },
+      {
+        type: "list",
+        message: "What is the department of the new role?",
+        name: "addRoleDepartment",
+        choices: ["Sales", "Engineering", "Finance", "Legal"]
+      }
+    ])
+    // TO DO: *************************
+    // this adds department instead of department ID
+    .then(function(answer) {
+      db.query("INSERT INTO role (title, salary, department) VALUES (?, ?, ?)", [answer.raddRoleName, answer.addRoleSalary, answer.addRoleDepartment], function(err, res) {
+        if (err) throw err;
+        console.table(res);
+        init();
+      });
+    });
+}
+
+function viewAllDepartments() {
+  let query = `SELECT * FROM department`;
+  db.query(query, function(err, res) {
+    if (err) throw err;
+    console.table(res);
+    init();
+  });
+}
+
+
+// TO DO: ******************
+// get employee by department. I understand the prompts, but not sure how to access specific department 
 
 
 
