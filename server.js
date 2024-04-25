@@ -94,6 +94,68 @@ function init(){
   });
 }
 
+function viewAllEmployees() {
+  let query = 
+  `SELECT 
+      employee.id, 
+      employee.first_name, 
+      employee.last_name, 
+      role.title, 
+      department.name AS department, 
+      role.salary, 
+      CONCAT(manager.first_name, ' ', manager.last_name) AS manager
+  FROM employee
+  LEFT JOIN role 
+  ON employee.role_id = role.id
+  LEFT JOIN department 
+  ON department.id = role.department_id
+  LEFT JOIN employee manager 
+  ON manager.id = employee.manager_id`
+
+  db.query(query, (err, res)=>{
+    if (err) throw err;
+    console.table(res);
+    init();
+  });
+}
+
+
+function addEmployee() {
+  inquirer
+    .prompt([
+      {
+        type: "input",
+        message: "What is the employees first name?",
+        name: "addEmployeeFirst"
+      },
+      {
+        type: "input",
+        message: "What is the employee's last name?",
+        name: "addEmployeeLast"
+      },
+      {
+        type: "list",
+        message: "What is the employee's role?",
+        name: "addEmployeeRole",
+        choices: ["Sales Lead", "Salesperson", "Lead Engineer", "Software Engineer", "Account Manager", "Accountant", "Legal Team Lead", "Lawyer"]
+      },
+      {
+        type: "list",
+        message: "What is the employee's manager?",
+        name: "addEmployeeManager",
+        choices: ["John Doe", "Mike Chan", "Ashley Rodriguez", "Kevin Tupik", "Kunal Singh", "Malia Brown", "Sarah Lourd", "Tom Allen"]
+      }
+    ])
+    .then(function(answer) {
+        db.query("INSERT INTO employee (first_name, last_name, role, manager) VALUES (?, ?, ?, ?)", [answer.addEmployeeFirst, answer.addEmployeeLast, answer.addEmployeeRole, answer.addEmployeeManager], function(err, res) {
+        if (err) throw err;
+        console.table(res);
+        init();
+      });
+    });
+}
+
+
 
 
 // Default response for any other request (Not Found)
