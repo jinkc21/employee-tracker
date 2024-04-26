@@ -119,6 +119,30 @@ function viewAllEmployees() {
 }
 
 function addEmployee() {
+
+  db.query('SELECT * FROM employee;', (err, res) => {
+    if(err) throw err;
+    console.log("data: ", res);
+    const managerChoices = res.map(({ id, first_name, last_name }) => (
+      {
+        name: `${first_name} ${last_name}`,
+        value: id
+      }
+    ));
+    
+    db.query('SELECT * FROM role;', (err, res) => {
+      if(err) throw err;
+      console.log("data: ", res);
+      const roleChoices = res.map(({ id, title }) => (
+        {
+          name: title,
+          value: id
+        }
+      ));
+
+   
+ 
+
   inquirer
     .prompt([
       {
@@ -135,7 +159,7 @@ function addEmployee() {
         type: "list",
         message: "What is the employee's role?",
         name: "addEmployeeRole",
-        choices: [
+      /*  choices: [
           "Sales Lead",
           "Salesperson",
           "Lead Engineer",
@@ -143,14 +167,15 @@ function addEmployee() {
           "Account Manager",
           "Accountant",
           "Legal Team Lead",
-          "Lawyer",
-        ],
+          "Lawyer", 
+        ], */
+        choices: roleChoices
       },
       {
         type: "list",
         message: "Who is the employee's manager?",
         name: "addEmployeeManager",
-        choices: [
+      /*  choices: [
           "John Doe",
           "Mike Chan",
           "Ashley Rodriguez",
@@ -159,13 +184,15 @@ function addEmployee() {
           "Malia Brown",
           "Sarah Lourd",
           "Tom Allen",
-        ],
+        ], */
+        choices: managerChoices
       },
     ])
     // currently adds manager's name instead of manager_id
     .then(function (answer) {
+      // console.log("Answers: ", answer)
       db.query(
-        "INSERT INTO employee (first_name, last_name, role, manager) VALUES (?, ?, ?, ?)",
+        "INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)",
         [
           answer.addEmployeeFirst,
           answer.addEmployeeLast,
@@ -179,20 +206,46 @@ function addEmployee() {
         }
       );
     });
+
+    }) // end of role query
+  }) // end of employee query
 }
+
 // TO DO: **********************************
 // View employee by manager. Not sure how.
 function viewEmployeesByManager() {
+
+  db.query('SELECT * FROM employee;', (err, res) => {
+    if(err) throw err;
+    console.log("data: ", res);
+    const managerChoices = res.map(({ id, first_name, last_name }) => (
+      {
+        name: `${first_name} ${last_name}`,
+        value: id
+      }
+    ));
+
   inquirer
     .prompt({
       type: "list",
       message: "Select a manager",
       name: "viewByManager",
+    /*  choices: [
+        "John Doe",
+        "Mike Chan",
+        "Ashley Rodriguez",
+        "Kevin Tupik",
+        "Kunal Singh",
+        "Malia Brown",
+        "Sarah Lourd",
+        "Tom Allen",
+      ], */
+      choices: managerChoices
     })
     .then(function (answer) {
       db.query(
-        // "Select * FROM employee ",
-        // [answer.viewByManager],
+        "Select id, first_name, last_name FROM employee where manager_id = ?;",
+        [answer.viewByManager],
         function (err, res) {
           if (err) throw err;
           console.table(res);
@@ -200,10 +253,18 @@ function viewEmployeesByManager() {
         }
       );
     });
+
+  });
 }
 
 // TO DO: **********************************
 // update manager. not sure how to update.
+function updateEmployeeManagers() {
+  db.query(`UPDATE employee SET manager_id = ?`, answers.newManagerId, (err, res) => {
+    
+  })
+}
+
 
 
 // TO DO: ************************
