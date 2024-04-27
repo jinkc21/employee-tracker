@@ -130,7 +130,6 @@ function addEmployee() {
 
     db.query("SELECT * FROM role;", (err, res) => {
       if (err) throw err;
-      console.log("data: ", res);
       const roleChoices = res.map(({ id, title }) => ({
         name: title,
         value: id,
@@ -206,7 +205,6 @@ function addEmployee() {
 function viewEmployeesByManager() {
   db.query("SELECT * FROM employee;", (err, res) => {
     if (err) throw err;
-    console.log("data: ", res);
     const managerChoices = res.map(({ id, first_name, last_name }) => ({
       name: `${first_name} ${last_name}`,
       value: id,
@@ -247,7 +245,6 @@ function viewEmployeesByManager() {
 function updateEmployeeManagers() {
   db.query("SELECT * FROM employee;", (err, res) => {
     if (err) throw err;
-    console.log("data: ", res);
     const employeeChoices = res.map(({ id, first_name, last_name }) => ({
       name: `${first_name} ${last_name}`,
       value: id,
@@ -281,9 +278,7 @@ function updateEmployeeManagers() {
     });
   }
 
-// TO DO: ************************
-// currently shows department id instead of department
-
+// View roles
 function viewAllRoles() {
   let query = `SELECT 
   role.id, 
@@ -303,7 +298,17 @@ function viewAllRoles() {
 // TO DO: ****************************
 // Update employee role. Not sure how to update
 
+
+
+
 function addRole() {
+  db.query("SELECT * FROM department;", (err, res) => {
+    if (err) throw err;
+    const departmentChoices = res.map(({ id, name }) => ({
+      name: name,
+      value: id,
+    }));
+
   inquirer
     .prompt([
       {
@@ -320,21 +325,21 @@ function addRole() {
         type: "list",
         message: "What is the department of the new role?",
         name: "addRoleDepartment",
-        choices: ["Sales", "Engineering", "Finance", "Legal"],
+        choices: departmentChoices,
       },
     ])
-    // TO DO: *************************
-    // this adds department instead of department ID
+  
     .then(function (answer) {
       db.query(
-        "INSERT INTO role (title, salary, department) VALUES (?, ?, ?)",
-        [answer.raddRoleName, answer.addRoleSalary, answer.addRoleDepartment],
+        "INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)",
+        [answer.addRoleName, answer.addRoleSalary, answer.addRoleDepartment],
         function (err, res) {
           if (err) throw err;
           console.table(res);
           init();
         }
       );
+    })
     });
 }
 
