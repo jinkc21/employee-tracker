@@ -93,7 +93,7 @@ function init() {
       if (err) throw err;
     });
 }
-
+// view all employees
 function viewAllEmployees() {
   let query = `SELECT 
       employee.id, 
@@ -101,7 +101,7 @@ function viewAllEmployees() {
       employee.last_name, 
       role.title, 
       department.name AS department, 
-      role.salary, 
+      role.salary,
       CONCAT(manager.first_name, ' ', manager.last_name) AS manager
   FROM employee
   LEFT JOIN role 
@@ -118,48 +118,41 @@ function viewAllEmployees() {
   });
 }
 
+// add employee
 function addEmployee() {
+  db.query("SELECT * FROM employee;", (err, res) => {
+    if (err) throw err;
+    // console.log("data: ", res);
+    const managerChoices = res.map(({ id, first_name, last_name }) => ({
+      name: `${first_name} ${last_name}`,
+      value: id,
+    }));
 
-  db.query('SELECT * FROM employee;', (err, res) => {
-    if(err) throw err;
-    console.log("data: ", res);
-    const managerChoices = res.map(({ id, first_name, last_name }) => (
-      {
-        name: `${first_name} ${last_name}`,
-        value: id
-      }
-    ));
-    
-    db.query('SELECT * FROM role;', (err, res) => {
-      if(err) throw err;
+    db.query("SELECT * FROM role;", (err, res) => {
+      if (err) throw err;
       console.log("data: ", res);
-      const roleChoices = res.map(({ id, title }) => (
-        {
-          name: title,
-          value: id
-        }
-      ));
+      const roleChoices = res.map(({ id, title }) => ({
+        name: title,
+        value: id,
+      }));
 
-   
- 
-
-  inquirer
-    .prompt([
-      {
-        type: "input",
-        message: "What is the employees first name?",
-        name: "addEmployeeFirst",
-      },
-      {
-        type: "input",
-        message: "What is the employee's last name?",
-        name: "addEmployeeLast",
-      },
-      {
-        type: "list",
-        message: "What is the employee's role?",
-        name: "addEmployeeRole",
-      /*  choices: [
+      inquirer
+        .prompt([
+          {
+            type: "input",
+            message: "What is the employees first name?",
+            name: "addEmployeeFirst",
+          },
+          {
+            type: "input",
+            message: "What is the employee's last name?",
+            name: "addEmployeeLast",
+          },
+          {
+            type: "list",
+            message: "What is the employee's role?",
+            name: "addEmployeeRole",
+            /*  choices: [
           "Sales Lead",
           "Salesperson",
           "Lead Engineer",
@@ -169,13 +162,13 @@ function addEmployee() {
           "Legal Team Lead",
           "Lawyer", 
         ], */
-        choices: roleChoices
-      },
-      {
-        type: "list",
-        message: "Who is the employee's manager?",
-        name: "addEmployeeManager",
-      /*  choices: [
+            choices: roleChoices,
+          },
+          {
+            type: "list",
+            message: "Who is the employee's manager?",
+            name: "addEmployeeManager",
+            /*  choices: [
           "John Doe",
           "Mike Chan",
           "Ashley Rodriguez",
@@ -185,52 +178,46 @@ function addEmployee() {
           "Sarah Lourd",
           "Tom Allen",
         ], */
-        choices: managerChoices
-      },
-    ])
-    // currently adds manager's name instead of manager_id
-    .then(function (answer) {
-      // console.log("Answers: ", answer)
-      db.query(
-        "INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)",
-        [
-          answer.addEmployeeFirst,
-          answer.addEmployeeLast,
-          answer.addEmployeeRole,
-          answer.addEmployeeManager,
-        ],
-        function (err, res) {
-          if (err) throw err;
-          console.table(res);
-          init();
-        }
-      );
-    });
-
-    }) // end of role query
-  }) // end of employee query
+            choices: managerChoices,
+          },
+        ])
+        .then(function (answer) {
+          // console.log("Answers: ", answer)
+          db.query(
+            "INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)",
+            [
+              answer.addEmployeeFirst,
+              answer.addEmployeeLast,
+              answer.addEmployeeRole,
+              answer.addEmployeeManager,
+            ],
+            function (err, res) {
+              if (err) throw err;
+              console.table(res);
+              init();
+            }
+          );
+        });
+    }); // end of role query
+  }); // end of employee query
 }
 
-// TO DO: **********************************
-// View employee by manager. Not sure how.
+// View employee by manager.
 function viewEmployeesByManager() {
-
-  db.query('SELECT * FROM employee;', (err, res) => {
-    if(err) throw err;
+  db.query("SELECT * FROM employee;", (err, res) => {
+    if (err) throw err;
     console.log("data: ", res);
-    const managerChoices = res.map(({ id, first_name, last_name }) => (
-      {
-        name: `${first_name} ${last_name}`,
-        value: id
-      }
-    ));
+    const managerChoices = res.map(({ id, first_name, last_name }) => ({
+      name: `${first_name} ${last_name}`,
+      value: id,
+    }));
 
-  inquirer
-    .prompt({
-      type: "list",
-      message: "Select a manager",
-      name: "viewByManager",
-    /*  choices: [
+    inquirer
+      .prompt({
+        type: "list",
+        message: "Select a manager",
+        name: "viewByManager",
+        /*  choices: [
         "John Doe",
         "Mike Chan",
         "Ashley Rodriguez",
@@ -240,37 +227,72 @@ function viewEmployeesByManager() {
         "Sarah Lourd",
         "Tom Allen",
       ], */
-      choices: managerChoices
-    })
-    .then(function (answer) {
-      db.query(
-        "Select id, first_name, last_name FROM employee where manager_id = ?;",
-        [answer.viewByManager],
-        function (err, res) {
-          if (err) throw err;
-          console.table(res);
-          init();
-        }
-      );
-    });
-
+        choices: managerChoices,
+      })
+      .then(function (answer) {
+        db.query(
+          "Select id, first_name, last_name FROM employee where manager_id = ?;",
+          [answer.viewByManager],
+          function (err, res) {
+            if (err) throw err;
+            console.table(res);
+            init();
+          }
+        );
+      });
   });
 }
 
-// TO DO: **********************************
-// update manager. not sure how to update.
+// update employee manager
 function updateEmployeeManagers() {
-  db.query(`UPDATE employee SET manager_id = ?`, answers.newManagerId, (err, res) => {
-    
-  })
-}
-
-
+  db.query("SELECT * FROM employee;", (err, res) => {
+    if (err) throw err;
+    console.log("data: ", res);
+    const employeeChoices = res.map(({ id, first_name, last_name }) => ({
+      name: `${first_name} ${last_name}`,
+      value: id,
+    }));
+          inquirer
+        .prompt([
+          {
+            type: "list",
+            message: "Which employee is updating the manager?",
+            name: "employeeList",
+            choices: employeeChoices
+          },
+          {
+            type: "list",
+            message: "Who is the employee's updated manager?",
+            name: "managerList",
+            choices: employeeChoices,
+          },
+        ])
+        .then(function (answer) {
+          db.query(
+            `UPDATE employee SET manager_id = ? WHERE id = ?`,
+            [answer.managerList, answer.employeeList],
+            (err, res) => {
+              if (err) throw err;
+              console.table(res);
+              init();
+            }
+          );
+        });
+    });
+  }
 
 // TO DO: ************************
 // currently shows department id instead of department
+
 function viewAllRoles() {
-  let query = `SELECT * FROM role`;
+  let query = `SELECT 
+  role.id, 
+  role.title, 
+  department.name AS department, 
+  role.salary
+  FROM role
+  LEFT JOIN department 
+  ON role.department_id = department.id`;
   db.query(query, function (err, res) {
     if (err) throw err;
     console.table(res);
@@ -348,11 +370,8 @@ function addDepartment() {
     });
 }
 
-
 // TODO: *******************
 // Delete Departments, Roles, and Employees. I have an idea on the prompts, but not how to excecute.
-
-
 
 // Default response for any other request (Not Found)
 // app.use((req, res) => {
