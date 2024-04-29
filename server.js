@@ -1,4 +1,4 @@
-// Import and require mysql2 and inquirer
+// Import and require mysql2, inquirer, and console.table
 const mysql = require("mysql2");
 const inquirer = require("inquirer");
 require("console.table");
@@ -43,7 +43,9 @@ function init() {
           "View All Departments",
           "View Employees By Department",
           "Add Department",
-          "Delete Departments, Roles, and Employees",
+          "Delete Employee",
+          "Delete Role",
+          "Delete Department",
           "Quit",
         ],
       },
@@ -81,8 +83,14 @@ function init() {
         case "Add Department":
           addDepartment();
           break;
-        case "Delete Departments, Roles, and Employees":
-          deleteDepartmentsRolesEmployees();
+        case "Delete Employee":
+          deleteEmployee();
+          break;
+        case "Delete Role":
+          deleteRole();
+          break;
+        case "Delete Department":
+          deleteDepartment();
           break;
         case "Quit":
           db.end();
@@ -339,6 +347,7 @@ function updateEmployeeRole() {
   });
 }
 
+// Add Role
 function addRole() {
   db.query("SELECT * FROM department;", (err, res) => {
     if (err) throw err;
@@ -389,7 +398,6 @@ function viewAllDepartments() {
     init();
   });
 }
-
 
 // view employee by department
 function viewEmployeesByDepartment() {
@@ -453,18 +461,90 @@ function addDepartment() {
     });
 }
 
-// TODO: *******************
-// Delete Departments, Roles, and Employees. I have an idea on the prompts, but not how to excecute.
 
+// Delete Employee
+function deleteEmployee() {
+  db.query("SELECT * FROM employee;", (err, res) => {
+    if (err) throw err;
+    const employeeChoices = res.map(({ id, first_name, last_name }) => ({
+      name: `${first_name} ${last_name}`,
+      value: id,
+    }));
+    inquirer
+      .prompt({
+        type: "list",
+        message: "What is the name of the employee being deleted?",
+        name: "deleteEmployeeChoice",
+        choices: employeeChoices,
+      })
+      .then(function (answer) {
+        db.query(
+          "DELETE FROM employee WHERE employee.id = ?",
+          [answer.deleteEmployeeChoice],
+          function (err, res) {
+            if (err) throw err;
+            console.table(res);
+            init();
+          }
+        );
+      });
+  });
+}
 
+// Delete Role
+function deleteRole() {
+  db.query("SELECT * FROM role;", (err, res) => {
+    if (err) throw err;
+    const roleChoices = res.map(({ id, title }) => ({
+      name: title,
+      value: id,
+    }));
+    inquirer
+      .prompt({
+        type: "list",
+        message: "What is the role being deleted?",
+        name: "deleteRoleChoice",
+        choices: roleChoices,
+      })
+      .then(function (answer) {
+        db.query(
+          "DELETE FROM role WHERE role.id = ?",
+          [answer.deleteRoleChoice],
+          function (err, res) {
+            if (err) throw err;
+            console.table(res);
+            init();
+          }
+        );
+      });
+  });
+}
 
-
-function deleteDepartmentsRolesEmployees() {
-  inquirer
-    .prompt({
-      type: "list",
-      message: "What would you like to delete?",
-      name: "deleteChoices",
-      list: [Department, Role, Employee]
-    })
+// Delete department
+function deleteDepartment() {
+  db.query("SELECT * FROM department;", (err, res) => {
+    if (err) throw err;
+    const departmentChoices = res.map(({ id, name }) => ({
+      name: name,
+      value: id,
+    }));
+    inquirer
+      .prompt({
+        type: "list",
+        message: "What is the department being deleted?",
+        name: "deleteDepartmentChoice",
+        choices: departmentChoices,
+      })
+      .then(function (answer) {
+        db.query(
+          "DELETE FROM department WHERE department.id = ?",
+          [answer.deleteDepartmentChoice],
+          function (err, res) {
+            if (err) throw err;
+            console.table(res);
+            init();
+          }
+        );
+      });
+  });
 }
