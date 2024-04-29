@@ -249,34 +249,34 @@ function updateEmployeeManagers() {
       name: `${first_name} ${last_name}`,
       value: id,
     }));
-          inquirer
-        .prompt([
-          {
-            type: "list",
-            message: "Which employee is updating the manager?",
-            name: "employeeList",
-            choices: employeeChoices
-          },
-          {
-            type: "list",
-            message: "Who is the employee's updated manager?",
-            name: "managerList",
-            choices: employeeChoices,
-          },
-        ])
-        .then(function (answer) {
-          db.query(
-            `UPDATE employee SET manager_id = ? WHERE id = ?`,
-            [answer.managerList, answer.employeeList],
-            (err, res) => {
-              if (err) throw err;
-              console.table(res);
-              init();
-            }
-          );
-        });
-    });
-  }
+    inquirer
+      .prompt([
+        {
+          type: "list",
+          message: "Which employee is updating the manager?",
+          name: "employeeList",
+          choices: employeeChoices,
+        },
+        {
+          type: "list",
+          message: "Who is the employee's updated manager?",
+          name: "managerList",
+          choices: employeeChoices,
+        },
+      ])
+      .then(function (answer) {
+        db.query(
+          `UPDATE employee SET manager_id = ? WHERE id = ?`,
+          [answer.managerList, answer.employeeList],
+          (err, res) => {
+            if (err) throw err;
+            console.table(res);
+            init();
+          }
+        );
+      });
+  });
+}
 
 // View roles
 function viewAllRoles() {
@@ -295,11 +295,49 @@ function viewAllRoles() {
   });
 }
 
-// TO DO: ****************************
-// Update employee role. Not sure how to update
-
-
-
+// Update employee role.
+function updateEmployeeRole() {
+  db.query("SELECT * FROM employee;", (err, res) => {
+    if (err) throw err;
+    const employeeChoices = res.map(({ id, first_name, last_name }) => ({
+      name: `${first_name} ${last_name}`,
+      value: id,
+    }));
+    db.query("SELECT * FROM role;", (err, res) => {
+      if (err) throw err;
+      const roleChoices = res.map(({ id, title }) => ({
+        name: title,
+        value: id,
+      }));
+      inquirer
+        .prompt([
+          {
+            type: "list",
+            message: "Which employee is updating the role?",
+            name: "employeeList",
+            choices: employeeChoices,
+          },
+          {
+            type: "list",
+            message: "What is the employee's updated role?",
+            name: "roleList",
+            choices: roleChoices,
+          },
+        ])
+        .then(function (answer) {
+          db.query(
+            `UPDATE employee SET role_id = ? WHERE id = ?`,
+            [answer.roleList, answer.employeeList],
+            (err, res) => {
+              if (err) throw err;
+              console.table(res);
+              init();
+            }
+          );
+        });
+    });
+  });
+}
 
 function addRole() {
   db.query("SELECT * FROM department;", (err, res) => {
@@ -309,38 +347,38 @@ function addRole() {
       value: id,
     }));
 
-  inquirer
-    .prompt([
-      {
-        type: "input",
-        message: "What is the name of the new role?",
-        name: "addRoleName",
-      },
-      {
-        type: "input",
-        message: "What is the salary of the new role? (numbers only)",
-        name: "addRoleSalary",
-      },
-      {
-        type: "list",
-        message: "What is the department of the new role?",
-        name: "addRoleDepartment",
-        choices: departmentChoices,
-      },
-    ])
-  
-    .then(function (answer) {
-      db.query(
-        "INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)",
-        [answer.addRoleName, answer.addRoleSalary, answer.addRoleDepartment],
-        function (err, res) {
-          if (err) throw err;
-          console.table(res);
-          init();
-        }
-      );
-    })
-    });
+    inquirer
+      .prompt([
+        {
+          type: "input",
+          message: "What is the name of the new role?",
+          name: "addRoleName",
+        },
+        {
+          type: "input",
+          message: "What is the salary of the new role? (numbers only)",
+          name: "addRoleSalary",
+        },
+        {
+          type: "list",
+          message: "What is the department of the new role?",
+          name: "addRoleDepartment",
+          choices: departmentChoices,
+        },
+      ])
+
+      .then(function (answer) {
+        db.query(
+          "INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)",
+          [answer.addRoleName, answer.addRoleSalary, answer.addRoleDepartment],
+          function (err, res) {
+            if (err) throw err;
+            console.table(res);
+            init();
+          }
+        );
+      });
+  });
 }
 
 function viewAllDepartments() {
@@ -352,9 +390,49 @@ function viewAllDepartments() {
   });
 }
 
-// TO DO: ******************
-// view employee by department. I understand the prompts, but not sure how to access specific department
 
+// view employee by department
+function viewEmployeesByDepartment() {
+  db.query("SELECT * FROM department;", (err, res) => {
+    if (err) throw err;
+    const departmentChoices = res.map(({ id, name }) => ({
+      name: name,
+      value: id,
+    }));
+
+    inquirer
+      .prompt({
+        type: "list",
+        message: "Select a department",
+        name: "viewByDepartment",
+        choices: departmentChoices,
+      })
+      .then(function (answer) {
+        db.query(
+          `SELECT 
+          employee.id, 
+          employee.first_name, 
+          employee.last_name, 
+          role.title, 
+          department.name
+          FROM employee
+          JOIN role
+          ON employee.role_id = role.id
+          JOIN department
+          ON department.id = role.department_id
+          WHERE department.id = ?;`,
+          [answer.viewByDepartment],
+          function (err, res) {
+            if (err) throw err;
+            console.table(res);
+            init();
+          }
+        );
+      });
+  });
+}
+
+// add department
 function addDepartment() {
   inquirer
     .prompt({
@@ -378,11 +456,15 @@ function addDepartment() {
 // TODO: *******************
 // Delete Departments, Roles, and Employees. I have an idea on the prompts, but not how to excecute.
 
-// Default response for any other request (Not Found)
-// app.use((req, res) => {
-//     res.status(404).end();
-//   });
 
-//   app.listen(PORT, () => {
-//     console.log(`Server running on port ${PORT}`);
-//   });
+
+
+function deleteDepartmentsRolesEmployees() {
+  inquirer
+    .prompt({
+      type: "list",
+      message: "What would you like to delete?",
+      name: "deleteChoices",
+      list: [Department, Role, Employee]
+    })
+}
